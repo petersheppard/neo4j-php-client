@@ -19,6 +19,7 @@ use GraphAware\Common\Connection\BaseConfiguration;
 use GraphAware\Common\Cypher\Statement;
 use GraphAware\Neo4j\Client\Exception\Neo4jException;
 use GraphAware\Neo4j\Client\HttpDriver\GraphDatabase as HttpGraphDB;
+use GraphAware\Neo4j\Client\SessionInterface;
 use GraphAware\Neo4j\Client\StackInterface;
 
 class Connection
@@ -44,7 +45,7 @@ class Connection
     private $config;
 
     /**
-     * @var \GraphAware\Common\Driver\SessionInterface
+     * @var SessionInterface
      */
     private $session;
 
@@ -93,6 +94,15 @@ class Connection
         $parameters = is_array($parameters) ? $parameters : [];
 
         return $this->session->createPipeline($query, $parameters, $tag);
+    }
+
+    /**
+     * @param string $name
+     */
+    public function useDatabase(string $name)
+    {
+        $this->checkSession();
+        $this->session->useDatabase($name);
     }
 
     /**
@@ -157,7 +167,7 @@ class Connection
     }
 
     /**
-     * @return \GraphAware\Common\Driver\SessionInterface
+     * @return SessionInterface
      */
     public function getSession()
     {

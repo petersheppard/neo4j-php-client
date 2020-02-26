@@ -59,6 +59,11 @@ class Session implements SessionInterface
     private $requestFactory;
 
     /**
+     * @var string Database name
+     */
+    private $database;
+
+    /**
      * @param string                  $uri
      * @param GuzzleClient|HttpClient $httpClient
      * @param ConfigInterface         $config
@@ -93,6 +98,11 @@ class Session implements SessionInterface
         $response = $pipeline->run();
 
         return $response->results()[0];
+    }
+
+    public function useDatabase(string $name)
+    {
+        $this->database = $name;
     }
 
     /**
@@ -195,7 +205,7 @@ class Session implements SessionInterface
             'Content-Type' => 'application/json',
         ];
 
-        return $this->requestFactory->createRequest('POST', sprintf('%s/db/data/transaction/commit', $this->uri), $headers, $body);
+        return $this->requestFactory->createRequest('POST', sprintf('%s/db/%s/tx/commit', $this->uri, $this->database), $headers, $body);
     }
 
     private function formatParams(array $params)
@@ -220,7 +230,7 @@ class Session implements SessionInterface
      */
     public function begin()
     {
-        $request = $this->requestFactory->createRequest('POST', sprintf('%s/db/data/transaction', $this->uri));
+        $request = $this->requestFactory->createRequest('POST', sprintf('%s/db/%s/tx', $this->uri, $this->database));
 
         try {
             return $this->httpClient->sendRequest($request);
@@ -269,7 +279,7 @@ class Session implements SessionInterface
             'statements' => $statements,
         ]);
 
-        $request = $this->requestFactory->createRequest('POST', sprintf('%s/db/data/transaction/%d', $this->uri, $transactionId), $headers, $body);
+        $request = $this->requestFactory->createRequest('POST', sprintf('%s/db/%s/tx/%d', $this->uri, $this->database, $transactionId), $headers, $body);
 
         try {
             $response = $this->httpClient->sendRequest($request);
@@ -303,7 +313,7 @@ class Session implements SessionInterface
      */
     public function commitTransaction($transactionId)
     {
-        $request = $this->requestFactory->createRequest('POST', sprintf('%s/db/data/transaction/%d/commit', $this->uri, $transactionId));
+        $request = $this->requestFactory->createRequest('POST', sprintf('%s/db/%s/tx/%d/commit', $this->uri, $this->database, $transactionId));
         try {
             $response = $this->httpClient->sendRequest($request);
             $data = json_decode((string) $response->getBody(), true);
@@ -333,7 +343,7 @@ class Session implements SessionInterface
      */
     public function rollbackTransaction($transactionId)
     {
-        $request = $this->requestFactory->createRequest('DELETE', sprintf('%s/db/data/transaction/%d', $this->uri, $transactionId));
+        $request = $this->requestFactory->createRequest('DELETE', sprintf('%s/db/%s/tx/%d', $this->uri, $this->database, $transactionId));
 
         try {
             $this->httpClient->sendRequest($request);

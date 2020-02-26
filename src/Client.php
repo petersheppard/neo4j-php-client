@@ -45,6 +45,17 @@ class Client implements ClientInterface
     }
 
     /**
+     * @param string $name
+     *
+     * @param null $connectionAlias
+     */
+    public function useDatabase(string $name, $connectionAlias = null)
+    {
+        $connection = $this->connectionManager->getConnection($connectionAlias);
+        $connection->useDatabase($name);
+    }
+
+    /**
      * Run a Cypher statement against the default database or the database specified.
      *
      * @param $query
